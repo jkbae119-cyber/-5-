@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-5대 성장산업 ETF 재구성 리포트</title>
+<style>
+  :root {
+    --primary: #1a237e;
+    --accent: #ff6f00;
+    --green: #2e7d32;
+    --red: #c62828;
+    --bg: #f5f5f5;
+    --card: #ffffff;
+    --text: #212121;
+    --muted: #757575;
+    --border: #e0e0e0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, #283593 50%, #1565c0 100%);
+    color: white;
+    padding: 48px 0 40px;
+    text-align: center;
+  }
+  .header h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+  .header .subtitle { font-size: 1.1rem; opacity: 0.85; }
+  .header .date { margin-top: 12px; font-size: 0.9rem; opacity: 0.7; }
+
+  /* Container */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Section */
+  .section { margin: 32px 0; }
+  .section-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--primary);
+    border-left: 4px solid var(--accent);
+    padding-left: 12px;
+    margin-bottom: 20px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+
+  /* KPI row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .kpi-box {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px 20px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .kpi-box .label { font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+  .kpi-box .value { font-size: 2rem; font-weight: 800; }
+  .kpi-box .sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+  .kpi-green .value { color: var(--green); }
+  .kpi-accent .value { color: var(--accent); }
+  .kpi-primary .value { color: var(--primary); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  tr:hover td { background: #f0f4ff; }
+  .text-left { text-align: left; }
+  .text-right { text-align: right; }
+  .positive { color: var(--green); font-weight: 700; }
+  .negative { color: var(--red); font-weight: 700; }
+  .highlight-row td { background: #fff3e0; font-weight: 600; }
+  .total-row td { background: #e8eaf6; font-weight: 700; border-top: 2px solid var(--primary); }
+
+  /* Bar chart */
+  .bar-chart { margin: 20px 0; }
+  .bar-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .bar-label {
+    width: 160px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: right;
+    padding-right: 12px;
+    flex-shrink: 0;
+  }
+  .bar-track {
+    flex: 1;
+    height: 32px;
+    background: #e8eaf6;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    color: white;
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: width 1s ease;
+  }
+  .bar-fill.green { background: linear-gradient(90deg, #43a047, #2e7d32); }
+  .bar-fill.blue { background: linear-gradient(90deg, #42a5f5, #1565c0); }
+  .bar-fill.orange { background: linear-gradient(90deg, #ffa726, #e65100); }
+  .bar-fill.red { background: linear-gradient(90deg, #ef5350, #c62828); }
+
+  /* Comparison boxes */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    align-items: center;
+    margin: 20px 0;
+  }
+  .compare-box {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .compare-box h3 { font-size: 1rem; margin-bottom: 12px; color: var(--muted); }
+  .compare-box .big-num { font-size: 2.4rem; font-weight: 800; }
+  .compare-arrow { text-align: center; font-size: 2rem; color: var(--accent); }
+  .compare-old { border: 2px solid var(--border); }
+  .compare-new { border: 2px solid var(--accent); }
+
+  /* Donut chart (CSS only) */
+  .donut-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .donut {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    position: relative;
+  }
+  .donut-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px; height: 100px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-align: center;
+  }
+
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .tag-new { background: #fff3e0; color: #e65100; }
+  .tag-keep { background: #e8f5e9; color: #2e7d32; }
+  .tag-remove { background: #ffebee; color: #c62828; }
+
+  /* YouTube check */
+  .yt-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .yt-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-top: 3px solid var(--primary);
+  }
+  .yt-card h4 { font-size: 0.95rem; color: var(--primary); margin-bottom: 10px; }
+  .yt-item { font-size: 0.85rem; margin-bottom: 6px; padding-left: 8px; border-left: 2px solid var(--border); }
+  .yt-item.hot { border-left-color: var(--accent); }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .yt-grid { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .compare-arrow { transform: rotate(90deg); }
+    .header h1 { font-size: 1.6rem; }
+    .donut-container { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ====== HEADER ====== -->
+<div class="header">
+  <div class="container">
+    <h1>K-5대 성장산업 정예 10 ETF</h1>
+    <div class="subtitle">재구성 리포트 &mdash; 자동차 &rarr; K-소비재(뷰티+푸드) 대체</div>
+    <div class="date">2026-04-14 | 분석 도구: Claude Code (Opus 4.6)</div>
+  </div>
+</div>
+
+<!-- ====== KPI ====== -->
+<div class="container">
+  <div class="kpi-row">
+    <div class="kpi-box kpi-green">
+      <div class="label">신규 포트폴리오 2년 수익률</div>
+      <div class="value">+293.9%</div>
+      <div class="sub">2024.3.29 ~ 2026.3.31</div>
+    </div>
+    <div class="kpi-box kpi-accent">
+      <div class="label">기존 포트폴리오 대비</div>
+      <div class="value">+70.8%p</div>
+      <div class="sub">기존 +223.1%</div>
+    </div>
+    <div class="kpi-box kpi-primary">
+      <div class="label">KOSPI200 대비 초과수익</div>
+      <div class="value">+192.9%p</div>
+      <div class="sub">KOSPI200 +101.0%</div>
+    </div>
+    <div class="kpi-box kpi-green">
+      <div class="label">연환산 수익률 (CAGR)</div>
+      <div class="value">~98%</div>
+      <div class="sub">KOSPI200 CAGR ~42%</div>
+    </div>
+  </div>
+
+  <!-- ====== 1. Executive Summary ====== -->
+  <div class="section">
+    <h2 class="section-title">Executive Summary</h2>
+    <div class="card">
+      <p style="font-size:1.05rem; line-height:1.8;">
+        기존 K-5대 산업(반도체·<strong>자동차</strong>·조선·방산·원전) 중 <strong>자동차를 K-소비재(코스맥스+삼양식품)</strong>로 교체한 결과,
+        백테스트 2년 수익률이 <strong>+223.1% &rarr; +293.9%</strong>로 <strong>70.8%p 개선</strong>되었습니다.
+        3개 투자 유튜브 채널 크로스체크에서도 자동차는 완전히 관심 밖이며, 원전·반도체·방산에 대한 강한 긍정 시각이 확인되어 재구성 판단을 뒷받침합니다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ====== 2. Portfolio Composition ====== -->
+  <div class="section">
+    <h2 class="section-title">최종 포트폴리오 구성</h2>
+
+    <div class="donut-container">
+      <!-- CSS Conic gradient donut -->
+      <div class="donut" style="background: conic-gradient(
+        #1a237e 0% 25%,
+        #3949ab 25% 50%,
+        #00838f 50% 59.4%,
+        #00acc1 59.4% 66.3%,
+        #e65100 66.3% 79.4%,
+        #ff9800 79.4% 82.6%,
+        #43a047 82.6% 90.1%,
+        #81c784 90.1% 91.9%,
+        #6a1b9a 91.9% 97%,
+        #ab47bc 97% 100%
+      );">
+        <div class="donut-center">10종목<br>5산업</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#1a237e"></div> 삼성전자 25.0%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3949ab"></div> SK하이닉스 25.0%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00838f"></div> 한화오션 9.4%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00acc1"></div> HD한국조선해양 6.9%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e65100"></div> 한화에어로스페이스 13.1%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff9800"></div> KAI 3.2%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#43a047"></div> 삼양식품 7.5%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#81c784"></div> 코스맥스 1.8%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6a1b9a"></div> 두산에너빌리티 5.1%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ab47bc"></div> HD현대일렉트릭 3.0%</div>
+      </div>
+    </div>
+
+    <div class="card" style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>산업</th>
+            <th>산업비중</th>
+            <th>종목</th>
+            <th>종목코드</th>
+            <th>종목비중</th>
+            <th>상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="2" style="font-weight:700; color:var(--primary);">반도체</td>
+            <td rowspan="2"><strong>50.0%</strong></td>
+            <td class="text-left">삼성전자</td>
+            <td>005930</td>
+            <td>25.0%</td>
+            <td><span class="tag tag-keep">유지</span></td>
+          </tr>
+          <tr>
+            <td class="text-left">SK하이닉스</td>
+            <td>000660</td>
+            <td>25.0%</td>
+            <td><span class="tag tag-keep">유지</span></td>
+          </tr>
+          <tr>
+            <td rowspan="2" style="font-weight:700; color:#00838f;">조선</td>
+            <td rowspan="2"><strong>16.3%</strong></td>
+            <td class="text-left">한화오션</td>
+            <td>042660</td>
+            <td>9.4%</td>
+            <td><span class="tag tag-keep">유지</span></td>
+          </tr>
+          <tr>
+            <td class="text-left">HD한국조선해양</td>
+            <td>009540</td>
+            <td>6.9%</td>
+            <td><span class="tag tag-keep">유지</span></td>
+          </tr>
+          <tr>
+            <td rowspan="2" style="font-weight:700; color:#e65100;">방산</td>
+            <td rowspan="2"><strong>16.3%</strong></td>
+            <td class="text-left">한화에어로스페이스</td>
+            <td>012450</td>
+            <td>13.1%</td>
+            <td><span class="tag tag-keep">유지</span></td>
+          </tr>
+          <tr>
+            <td class="text-left">KAI</td>
+            <td>047810</td>
+            <td>3.2%</td>
+            <td><span class="tag tag-keep">유지</span></td>
+          </tr>
+          <tr class="highlight-row">
+            <td rowspan="2" style="font-weight:700; color:#43a047;">K-소비재</td>
+            <td rowspan="2"><strong>9.3%</strong></td>
+            <td class="text-left">삼양식품</td>
+            <td>003230</td>
+            <td>7.5%</td>
+            <td><span class="tag tag-new">신규</span></td>
+          </tr>
+          <tr class="highlight-row">
+            <td class="text-left">코스맥스</td>
+            <td>192820</td>
+            <td>1.8%</td>
+            <td><span class="tag tag-new">신규</span></td>
+          </tr>
+          <tr>
+            <td rowspan="2" style="font-weight:700; color:#6a1b9a;">원전</td>
+            <td rowspan="2"><strong>8.1%</strong></td>
+            <td class="text-left">두산에너빌리티</td>
+            <td>034020</td>
+            <td>5.1%</td>
+            <td><span class="tag tag-keep">유지</span></td>
+          </tr>
+          <tr>
+            <td class="text-left">HD현대일렉트릭</td>
+            <td>267260</td>
+            <td>3.0%</td>
+            <td><span class="tag tag-keep">유지</span></td>
+          </tr>
+          <tr class="total-row">
+            <td>합계</td>
+            <td>100%</td>
+            <td colspan="3">10종목 / 5산업</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px; font-size:0.82rem; color:var(--muted);">
+        ※ 제외 종목: <span class="tag tag-remove">현대차 (005380)</span> <span class="tag tag-remove">기아 (000270)</span> — 자동차 산업 22.2% 전량 제외
+      </p>
+    </div>
+  </div>
+
+  <!-- ====== 3. Backtest ====== -->
+  <div class="section">
+    <h2 class="section-title">백테스트 성과 (2024.3.29 ~ 2026.3.31)</h2>
+
+    <div class="card" style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th class="text-left">종목</th>
+            <th>비중</th>
+            <th class="text-right">2024.3.29</th>
+            <th class="text-right">2026.3.31</th>
+            <th>수익률</th>
+            <th>기여도</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left">삼성전자</td>
+            <td>25.0%</td>
+            <td class="text-right">82,400</td>
+            <td class="text-right">169,200</td>
+            <td class="positive">+105.3%</td>
+            <td class="positive">+26.3%</td>
+          </tr>
+          <tr>
+            <td class="text-left">SK하이닉스</td>
+            <td>25.0%</td>
+            <td class="text-right">183,000</td>
+            <td class="text-right">823,000</td>
+            <td class="positive">+349.7%</td>
+            <td class="positive">+87.4%</td>
+          </tr>
+          <tr>
+            <td class="text-left">한화오션</td>
+            <td>9.4%</td>
+            <td class="text-right">27,600</td>
+            <td class="text-right">121,000</td>
+            <td class="positive">+338.4%</td>
+            <td class="positive">+31.8%</td>
+          </tr>
+          <tr>
+            <td class="text-left">HD한국조선해양</td>
+            <td>6.9%</td>
+            <td class="text-right">118,400</td>
+            <td class="text-right">345,250</td>
+            <td class="positive">+191.6%</td>
+            <td class="positive">+13.2%</td>
+          </tr>
+          <tr>
+            <td class="text-left">한화에어로스페이스</td>
+            <td>13.1%</td>
+            <td class="text-right">227,152*</td>
+            <td class="text-right">1,237,000</td>
+            <td class="positive">+444.6%</td>
+            <td class="positive">+58.2%</td>
+          </tr>
+          <tr>
+            <td class="text-left">KAI</td>
+            <td>3.2%</td>
+            <td class="text-right">51,500</td>
+            <td class="text-right">166,900</td>
+            <td class="positive">+224.1%</td>
+            <td class="positive">+7.2%</td>
+          </tr>
+          <tr class="highlight-row">
+            <td class="text-left">삼양식품 <span class="tag tag-new">신규</span></td>
+            <td>7.5%</td>
+            <td class="text-right">210,500</td>
+            <td class="text-right">1,200,000</td>
+            <td class="positive">+469.8%</td>
+            <td class="positive">+35.2%</td>
+          </tr>
+          <tr class="highlight-row">
+            <td class="text-left">코스맥스 <span class="tag tag-new">신규</span></td>
+            <td>1.8%</td>
+            <td class="text-right">120,100</td>
+            <td class="text-right">196,500</td>
+            <td class="positive">+63.6%</td>
+            <td class="positive">+1.1%</td>
+          </tr>
+          <tr>
+            <td class="text-left">두산에너빌리티</td>
+            <td>5.1%</td>
+            <td class="text-right">17,220</td>
+            <td class="text-right">92,500</td>
+            <td class="positive">+437.2%</td>
+            <td class="positive">+22.3%</td>
+          </tr>
+          <tr>
+            <td class="text-left">HD현대일렉트릭</td>
+            <td>3.0%</td>
+            <td class="text-right">179,400</td>
+            <td class="text-right">838,000</td>
+            <td class="positive">+367.0%</td>
+            <td class="positive">+11.0%</td>
+          </tr>
+          <tr class="total-row">
+            <td class="text-left">합계</td>
+            <td>100%</td>
+            <td></td>
+            <td></td>
+            <td class="positive">—</td>
+            <td class="positive">+293.9%</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:8px; font-size:0.82rem; color:var(--muted);">
+        *한화에어로스페이스: 인적분할 반영 수정주가 | 주가 출처: Yahoo Finance, Naver Finance
+      </p>
+    </div>
+
+    <!-- Bar Chart: 기여도 -->
+    <div class="card">
+      <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px;">종목별 수익 기여도</h3>
+      <div class="bar-chart">
+        <div class="bar-item">
+          <div class="bar-label">SK하이닉스</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width:89%;">+87.4%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">한화에어로스페이스</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width:59%;">+58.2%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label" style="color:var(--accent);">삼양식품 ★</div>
+          <div class="bar-track"><div class="bar-fill orange" style="width:36%;">+35.2%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">한화오션</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width:32%;">+31.8%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">삼성전자</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width:27%;">+26.3%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">두산에너빌리티</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width:23%;">+22.3%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">HD한국조선해양</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width:13%;">+13.2%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">HD현대일렉트릭</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width:11%;">+11.0%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label">KAI</div>
+          <div class="bar-track"><div class="bar-fill blue" style="width:7%;">+7.2%</div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label" style="color:var(--accent);">코스맥스 ★</div>
+          <div class="bar-track"><div class="bar-fill orange" style="width:3%;">+1.1%</div></div>
+        </div>
+      </div>
+      <p style="font-size:0.82rem; color:var(--muted);">★ K-소비재 신규 편입 종목</p>
+    </div>
+  </div>
+
+  <!-- ====== 4. Comparison ====== -->
+  <div class="section">
+    <h2 class="section-title">성과 비교</h2>
+
+    <div class="compare-grid">
+      <div class="compare-box compare-old" style="text-align:center;">
+        <h3>기존 (자동차 포함)</h3>
+        <div class="big-num" style="color:var(--primary);">+223.1%</div>
+        <div style="font-size:0.85rem; color:var(--muted); margin-top:4px;">CAGR ~80%</div>
+      </div>
+      <div class="compare-arrow">&rarr;</div>
+      <div class="compare-box compare-new" style="text-align:center;">
+        <h3>신규 (K-소비재 대체)</h3>
+        <div class="big-num" style="color:var(--green);">+293.9%</div>
+        <div style="font-size:0.85rem; color:var(--accent); margin-top:4px; font-weight:700;">CAGR ~98% (+18%p)</div>
+      </div>
+    </div>
+
+    <div class="card" style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th class="text-left">비교 항목</th>
+            <th>KOSPI</th>
+            <th>KOSPI200</th>
+            <th>기존 정예10</th>
+            <th style="background:var(--accent);">신규 정예10</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left">2년 수익률</td>
+            <td>+85.8%</td>
+            <td>+101.0%</td>
+            <td class="positive">+223.1%</td>
+            <td class="positive" style="font-size:1.1rem;">+293.9%</td>
+          </tr>
+          <tr>
+            <td class="text-left">연환산(CAGR)</td>
+            <td>~36%</td>
+            <td>~42%</td>
+            <td class="positive">~80%</td>
+            <td class="positive" style="font-size:1.1rem;">~98%</td>
+          </tr>
+          <tr>
+            <td class="text-left">KOSPI200 대비 초과</td>
+            <td>-15.2%p</td>
+            <td>—</td>
+            <td class="positive">+122.1%p</td>
+            <td class="positive" style="font-size:1.1rem;">+192.9%p</td>
+          </tr>
+          <tr>
+            <td class="text-left">종목 수</td>
+            <td>전체</td>
+            <td>200개</td>
+            <td>10개</td>
+            <td><strong>10개</strong></td>
+          </tr>
+          <tr>
+            <td class="text-left">산업 수</td>
+            <td>전체</td>
+            <td>전체</td>
+            <td>5개</td>
+            <td><strong>5개</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- What changed -->
+    <div class="card">
+      <h3 style="font-size:1rem; font-weight:700; margin-bottom:12px;">수익률 차이 원인 분석</h3>
+      <table>
+        <thead>
+          <tr>
+            <th class="text-left">항목</th>
+            <th>비중</th>
+            <th>수익률</th>
+            <th>기여도 차이</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left"><span class="tag tag-remove">제외</span> 현대차</td>
+            <td>12.2%</td>
+            <td>+92.9%</td>
+            <td class="negative">-11.3%</td>
+          </tr>
+          <tr>
+            <td class="text-left"><span class="tag tag-remove">제외</span> 기아</td>
+            <td>10.0%</td>
+            <td>+32.8%</td>
+            <td class="negative">-3.3%</td>
+          </tr>
+          <tr style="border-bottom: 2px solid var(--border);">
+            <td class="text-left" style="padding-left:24px; color:var(--muted);">소계: 제외 효과</td>
+            <td>22.2%</td>
+            <td></td>
+            <td class="negative">-14.6%</td>
+          </tr>
+          <tr>
+            <td class="text-left"><span class="tag tag-new">편입</span> 삼양식품</td>
+            <td>7.5%</td>
+            <td>+469.8%</td>
+            <td class="positive">+35.2%</td>
+          </tr>
+          <tr>
+            <td class="text-left"><span class="tag tag-new">편입</span> 코스맥스</td>
+            <td>1.8%</td>
+            <td>+63.6%</td>
+            <td class="positive">+1.1%</td>
+          </tr>
+          <tr>
+            <td class="text-left"><span class="tag tag-keep">비중변경</span> 나머지 8종목</td>
+            <td colspan="2" style="font-size:0.85rem; color:var(--muted);">비중 증가에 따른 기여도 증가</td>
+            <td class="positive">+49.1%</td>
+          </tr>
+          <tr class="total-row">
+            <td class="text-left">합계 차이</td>
+            <td></td>
+            <td></td>
+            <td class="positive" style="font-size:1.1rem;">+70.8%p</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ====== 5. YouTube Cross-check ====== -->
+  <div class="section">
+    <h2 class="section-title">유튜브 채널 크로스체크 (2026-04-14)</h2>
+    <div class="yt-grid">
+      <div class="yt-card">
+        <h4>@talentinvestment</h4>
+        <div class="yt-item hot">원전: 두산에너빌리티 반복 추천</div>
+        <div class="yt-item hot">반도체: 삼성전자 "신의 한 수"</div>
+        <div class="yt-item hot">방산: KF-21 수출 잭팟</div>
+        <div class="yt-item">자동차: <strong>언급 없음</strong></div>
+        <div class="yt-item">2차전지: 중국 전기차 부정적</div>
+      </div>
+      <div class="yt-card">
+        <h4>@buiknam_tv</h4>
+        <div class="yt-item hot">원전: "원전주 더 많이 오른다"</div>
+        <div class="yt-item hot">반도체: 삼성전자·반도체 강추</div>
+        <div class="yt-item hot">전후 수혜: "한국이 떼돈 번다"</div>
+        <div class="yt-item">자동차: <strong>언급 없음</strong></div>
+      </div>
+      <div class="yt-card">
+        <h4>@lucky_tv</h4>
+        <div class="yt-item hot">원전: "원전에서 텐배거 나온다"</div>
+        <div class="yt-item hot">반도체: 삼성전자 심상치 않다</div>
+        <div class="yt-item">2차전지: "치명적인 패착"</div>
+        <div class="yt-item">자동차: <strong>언급 없음</strong></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:1rem; font-weight:700; margin-bottom:12px;">채널 분석 종합</h3>
+      <table>
+        <thead>
+          <tr>
+            <th class="text-left">산업</th>
+            <th>talentinvestment</th>
+            <th>buiknam_tv</th>
+            <th>lucky_tv</th>
+            <th>종합 판정</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left">반도체</td>
+            <td class="positive">긍정</td>
+            <td class="positive">강추</td>
+            <td class="positive">긍정</td>
+            <td><strong style="color:var(--green);">&#9733;&#9733;&#9733; 매우 강세</strong></td>
+          </tr>
+          <tr>
+            <td class="text-left">원전</td>
+            <td class="positive">반복 추천</td>
+            <td class="positive">긍정</td>
+            <td class="positive">텐배거</td>
+            <td><strong style="color:var(--green);">&#9733;&#9733;&#9733; 매우 강세</strong></td>
+          </tr>
+          <tr>
+            <td class="text-left">방산</td>
+            <td class="positive">KF-21</td>
+            <td>—</td>
+            <td>—</td>
+            <td><strong style="color:var(--green);">&#9733;&#9733; 긍정</strong></td>
+          </tr>
+          <tr>
+            <td class="text-left">조선</td>
+            <td>적음</td>
+            <td>—</td>
+            <td>—</td>
+            <td>&#9733; 보통</td>
+          </tr>
+          <tr style="background:#fff3e0;">
+            <td class="text-left"><strong>자동차</strong></td>
+            <td class="negative">없음</td>
+            <td class="negative">없음</td>
+            <td class="negative">없음</td>
+            <td><strong style="color:var(--red);">&#10005; 관심 밖 → 제외 적합</strong></td>
+          </tr>
+          <tr>
+            <td class="text-left">2차전지</td>
+            <td>—</td>
+            <td>—</td>
+            <td class="negative">부정적</td>
+            <td style="color:var(--red);">&#10005; 부정적</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ====== 6. Weight Methodology ====== -->
+  <div class="section">
+    <h2 class="section-title">비중 산출 방법론</h2>
+    <div class="card">
+      <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:16px; text-align:center;">
+        <div style="background:#e8eaf6; border-radius:10px; padding:20px;">
+          <div style="font-size:2rem; font-weight:800; color:var(--primary);">Step 1</div>
+          <div style="font-size:0.9rem; margin-top:8px;">반도체 <strong>50%</strong> 고정<br>나머지 4산업 KOSPI 비중 추출</div>
+          <div style="font-size:0.82rem; color:var(--muted); margin-top:8px;">조선 4% | 방산 4% | 원전 2% | K-소비재 2.3%</div>
+        </div>
+        <div style="background:#fff3e0; border-radius:10px; padding:20px;">
+          <div style="font-size:2rem; font-weight:800; color:var(--accent);">Step 2</div>
+          <div style="font-size:0.9rem; margin-top:8px;">나머지 <strong>50%</strong>를<br>4산업에 비례 배분</div>
+          <div style="font-size:0.82rem; color:var(--muted); margin-top:8px;">각 산업비중 / 12.3% × 50%</div>
+        </div>
+        <div style="background:#e8f5e9; border-radius:10px; padding:20px;">
+          <div style="font-size:2rem; font-weight:800; color:var(--green);">Step 3</div>
+          <div style="font-size:0.9rem; margin-top:8px;">산업 내 2종목<br><strong>시가총액 비율</strong>로 배분</div>
+          <div style="font-size:0.82rem; color:var(--muted); margin-top:8px;">2026.4.14 장중 시총 기준</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 7. K-소비재 선정 근거 ====== -->
+  <div class="section">
+    <h2 class="section-title">K-소비재 종목 선정 근거</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="width:48px; height:48px; background:#43a047; border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem; font-weight:800;">푸드</div>
+          <div>
+            <div style="font-size:1.1rem; font-weight:700;">삼양식품</div>
+            <div style="font-size:0.82rem; color:var(--muted);">003230 | 시총 9.4조</div>
+          </div>
+        </div>
+        <ul style="font-size:0.9rem; padding-left:20px; line-height:2;">
+          <li>불닭 시리즈 글로벌 히트</li>
+          <li>미국·유럽·동남아 침투율 초기 단계</li>
+          <li>2년 수익률 <strong class="positive">+469.8%</strong></li>
+          <li>K-푸드 수출 대표 성장주</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="width:48px; height:48px; background:#81c784; border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem; font-weight:800;">뷰티</div>
+          <div>
+            <div style="font-size:1.1rem; font-weight:700;">코스맥스</div>
+            <div style="font-size:0.82rem; color:var(--muted);">192820 | 시총 2.2조</div>
+          </div>
+        </div>
+        <ul style="font-size:0.9rem; padding-left:20px; line-height:2;">
+          <li>ODM 세계 1위 — 구조적 수혜자</li>
+          <li>어떤 브랜드가 뜨든 제조물량 확보</li>
+          <li>2년 수익률 <strong class="positive">+63.6%</strong></li>
+          <li>K-뷰티 산업 전체에 베팅하는 효과</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 8. Marketing ====== -->
+  <div class="section">
+    <h2 class="section-title">마케팅 메시지</h2>
+    <div class="card" style="text-align:center; padding:40px;">
+      <div style="font-size:1.6rem; font-weight:800; color:var(--primary); line-height:1.5;">
+        "200개를 사서 101%,<br>10개를 사서 294%."
+      </div>
+      <div style="margin-top:16px; font-size:1rem; color:var(--muted);">
+        한국이 만드는 것, 한국이 파는 것 — 둘 다 세계 1등.
+      </div>
+      <div style="margin-top:24px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+        <span style="background:var(--primary); color:white; padding:8px 16px; border-radius:20px; font-size:0.9rem;">반도체</span>
+        <span style="background:#00838f; color:white; padding:8px 16px; border-radius:20px; font-size:0.9rem;">조선</span>
+        <span style="background:#e65100; color:white; padding:8px 16px; border-radius:20px; font-size:0.9rem;">방산</span>
+        <span style="background:#43a047; color:white; padding:8px 16px; border-radius:20px; font-size:0.9rem;">K-소비재</span>
+        <span style="background:#6a1b9a; color:white; padding:8px 16px; border-radius:20px; font-size:0.9rem;">원전</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 9. Risk Disclaimer ====== -->
+  <div class="section">
+    <h2 class="section-title">유의사항</h2>
+    <div class="card" style="background:#fafafa; border:1px solid var(--border); font-size:0.88rem; color:var(--muted); line-height:2;">
+      <ul style="padding-left:20px;">
+        <li>과거의 운용실적이 미래의 수익률을 보장하지 않습니다.</li>
+        <li>투자원금의 손실이 발생할 수 있습니다.</li>
+        <li>집중투자 전략으로 분산투자 대비 변동성이 높을 수 있습니다.</li>
+        <li>백테스트 결과는 시뮬레이션이며 실제 운용 수익률과 다를 수 있습니다.</li>
+        <li>ETF 상품화 시 단일종목 30% 상한 규제를 확인해야 합니다 (현재 삼성전자 25%로 충족).</li>
+        <li>배당 수익은 반영되지 않았습니다.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ====== Footer ====== -->
+  <div class="footer">
+    <p><strong>K-5대 성장산업 정예10 ETF 재구성 리포트</strong></p>
+    <p>주가 데이터: Yahoo Finance, Naver Finance (2026.3.31 / 2026.4.14)</p>
+    <p>KOSPI 산업별 비중: KRX 정보데이터시스템 추정치</p>
+    <p>분석 도구: Claude Code (Opus 4.6) | 문서 생성일: 2026-04-14</p>
+  </div>
+</div>
+
+</body>
+</html>
