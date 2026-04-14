@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-5대 성장산업 ETF — 3 포트폴리오 백테스트 비교</title>
+<style>
+  :root {
+    --primary: #1a237e;
+    --accent: #ff6f00;
+    --green: #2e7d32;
+    --red: #c62828;
+    --blue: #1565c0;
+    --purple: #6a1b9a;
+    --bg: #f5f5f5;
+    --card: #ffffff;
+    --text: #212121;
+    --muted: #757575;
+    --border: #e0e0e0;
+    /* Portfolio colors */
+    --c-orig: #546e7a;
+    --c-rev1: #e65100;
+    --c-rev2: #1565c0;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+
+  .header { background:linear-gradient(135deg,#0d1b2a 0%,#1b2838 40%,#1a237e 100%); color:#fff; padding:48px 0 40px; text-align:center; }
+  .header h1 { font-size:2.2rem; font-weight:800; letter-spacing:-0.5px; }
+  .header .sub { font-size:1.05rem; opacity:.8; margin-top:6px; }
+  .header .date { font-size:.85rem; opacity:.55; margin-top:10px; }
+
+  .container { max-width:1140px; margin:0 auto; padding:0 24px; }
+  .section { margin:36px 0; }
+  .section-title { font-size:1.35rem; font-weight:700; color:var(--primary); border-left:4px solid var(--accent); padding-left:12px; margin-bottom:20px; }
+
+  .card { background:var(--card); border-radius:12px; padding:28px; box-shadow:0 2px 12px rgba(0,0,0,.06); margin-bottom:20px; overflow-x:auto; }
+
+  /* Three-column KPI */
+  .tri-kpi { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:28px 0; }
+  .tri-box { border-radius:14px; padding:28px 20px; text-align:center; color:#fff; }
+  .tri-box.orig { background:linear-gradient(135deg,#607d8b,#455a64); }
+  .tri-box.rev1 { background:linear-gradient(135deg,#ff9800,#e65100); }
+  .tri-box.rev2 { background:linear-gradient(135deg,#42a5f5,#1565c0); }
+  .tri-box .port-name { font-size:.82rem; opacity:.85; text-transform:uppercase; letter-spacing:1px; }
+  .tri-box .port-ret { font-size:2.6rem; font-weight:800; margin:6px 0 2px; }
+  .tri-box .port-cagr { font-size:.95rem; opacity:.8; }
+  .tri-box .port-desc { font-size:.78rem; opacity:.65; margin-top:8px; line-height:1.4; }
+
+  /* Tables */
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th { background:var(--primary); color:#fff; padding:10px 8px; text-align:center; font-weight:600; font-size:.82rem; white-space:nowrap; }
+  td { padding:9px 8px; border-bottom:1px solid var(--border); text-align:center; }
+  tr:hover td { background:#f0f4ff; }
+  .tl { text-align:left; }
+  .tr { text-align:right; }
+  .pos { color:var(--green); font-weight:700; }
+  .neg { color:var(--red); font-weight:700; }
+  .hl td { background:#fff8e1; }
+  .tot td { background:#e8eaf6; font-weight:700; border-top:2px solid var(--primary); }
+  .removed td { background:#ffebee; text-decoration:line-through; color:#999; }
+
+  /* Horizontal grouped bar */
+  .gbar { margin:8px 0; }
+  .gbar-row { display:flex; align-items:center; margin-bottom:14px; }
+  .gbar-label { width:150px; font-size:.84rem; font-weight:600; text-align:right; padding-right:10px; flex-shrink:0; }
+  .gbar-bars { flex:1; display:flex; flex-direction:column; gap:3px; }
+  .gbar-track { height:18px; border-radius:4px; display:flex; align-items:center; padding-left:6px; color:#fff; font-size:.72rem; font-weight:700; }
+  .gbar-track.orig { background:var(--c-orig); }
+  .gbar-track.rev1 { background:var(--c-rev1); }
+  .gbar-track.rev2 { background:var(--c-rev2); }
+
+  /* Legend inline */
+  .legend-row { display:flex; gap:20px; justify-content:center; margin:12px 0 4px; font-size:.84rem; }
+  .legend-row span { display:flex; align-items:center; gap:5px; }
+  .ldot { width:14px; height:14px; border-radius:3px; flex-shrink:0; }
+
+  /* Tags */
+  .tag { display:inline-block; padding:2px 9px; border-radius:10px; font-size:.75rem; font-weight:600; }
+  .tag-new { background:#fff3e0; color:#e65100; }
+  .tag-keep { background:#e8f5e9; color:#2e7d32; }
+  .tag-rm { background:#ffebee; color:#c62828; }
+  .tag-orig { background:#eceff1; color:#546e7a; }
+  .tag-rev1 { background:#fff3e0; color:#e65100; }
+  .tag-rev2 { background:#e3f2fd; color:#1565c0; }
+
+  /* Insight boxes */
+  .insight { border-left:4px solid var(--accent); background:#fffde7; padding:16px 20px; border-radius:0 8px 8px 0; margin:16px 0; font-size:.92rem; }
+  .insight strong { color:var(--accent); }
+
+  /* Valuation comparison */
+  .val-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin:16px 0; }
+  .val-card { border-radius:10px; padding:20px; border:2px solid var(--border); }
+  .val-card h4 { font-size:1rem; margin-bottom:10px; }
+  .val-card.warn { border-color:#ffab00; background:#fffde7; }
+  .val-card.good { border-color:#43a047; background:#f1f8e9; }
+
+  /* Waterfall */
+  .wf-row { display:flex; align-items:center; margin-bottom:6px; }
+  .wf-label { width:200px; font-size:.84rem; text-align:right; padding-right:10px; flex-shrink:0; }
+  .wf-bar-area { flex:1; position:relative; height:24px; }
+  .wf-bar { position:absolute; height:24px; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:.75rem; font-weight:700; }
+
+  .footer { text-align:center; padding:32px 0; color:var(--muted); font-size:.8rem; border-top:1px solid var(--border); margin-top:40px; }
+
+  @media(max-width:768px){
+    .tri-kpi{grid-template-columns:1fr;}
+    .val-grid{grid-template-columns:1fr;}
+    .header h1{font-size:1.5rem;}
+    .gbar-label{width:100px;font-size:.76rem;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <div class="container">
+    <h1>K-5대 성장산업 정예 10 ETF</h1>
+    <div class="sub">3 포트폴리오 백테스트 비교 리포트</div>
+    <div class="date">백테스트 기간: 2024.3.29 ~ 2026.3.31 (2년) | 작성일: 2026-04-14</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== TOP KPI ===== -->
+<div class="tri-kpi">
+  <div class="tri-box orig">
+    <div class="port-name">Original</div>
+    <div class="port-ret">+223.1%</div>
+    <div class="port-cagr">CAGR ~80%</div>
+    <div class="port-desc">반도체 · 자동차 · 조선 · 방산 · 원전</div>
+  </div>
+  <div class="tri-box rev1">
+    <div class="port-name">Revised 1</div>
+    <div class="port-ret">+293.9%</div>
+    <div class="port-cagr">CAGR ~98%</div>
+    <div class="port-desc">자동차→K-소비재(삼양식품+코스맥스)</div>
+  </div>
+  <div class="tri-box rev2">
+    <div class="port-name">Revised 2</div>
+    <div class="port-ret">+262.0%</div>
+    <div class="port-cagr">CAGR ~90%</div>
+    <div class="port-desc">자동차→K-소비재(오리온+코스맥스)</div>
+  </div>
+</div>
+
+<!-- ===== 1. EXECUTIVE SUMMARY ===== -->
+<div class="section">
+  <h2 class="section-title">Executive Summary</h2>
+  <div class="card">
+    <p style="font-size:1.02rem; line-height:1.9;">
+      세 포트폴리오 모두 KOSPI200(+101%) 대비 <strong>2배 이상 초과수익</strong>을 달성합니다.
+      <strong>Revised 1</strong>(삼양식품)은 백테스트 수익률이 가장 높지만(+293.9%), 삼양식품의 과거 +469.8% 수익이 "후행적 선별"이라는 인상을 줄 수 있습니다.
+      <strong>Revised 2</strong>(오리온)는 수익률이 -31.9%p 낮지만(+262.0%), Forward PER 8.8배의 저평가 + 4개국 현지 생산이라는 <strong>전행적 성장 논리</strong>로 투자자 설득력이 더 강합니다.
+      두 Revised 모두 Original(+223.1%) 대비 의미 있는 초과수익을 보여, <strong>자동차→K-소비재 교체</strong> 자체는 유효합니다.
+    </p>
+  </div>
+</div>
+
+<!-- ===== 2. PORTFOLIO COMPOSITIONS ===== -->
+<div class="section">
+  <h2 class="section-title">포트폴리오 구성 비교</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th class="tl">산업</th>
+          <th class="tl">종목</th>
+          <th>코드</th>
+          <th><span class="tag tag-orig">Original</span></th>
+          <th><span class="tag tag-rev1">Revised 1</span></th>
+          <th><span class="tag tag-rev2">Revised 2</span></th>
+          <th>변경사항</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tl" rowspan="2" style="font-weight:700;">반도체<br><span style="font-size:.75rem;color:var(--muted);">50%</span></td>
+          <td class="tl">삼성전자</td><td>005930</td>
+          <td>25.0%</td><td>25.0%</td><td>25.0%</td>
+          <td><span class="tag tag-keep">동일</span></td>
+        </tr>
+        <tr>
+          <td class="tl">SK하이닉스</td><td>000660</td>
+          <td>25.0%</td><td>25.0%</td><td>25.0%</td>
+          <td><span class="tag tag-keep">동일</span></td>
+        </tr>
+        <tr class="removed">
+          <td class="tl" rowspan="2" style="text-decoration:none;font-weight:700;color:var(--red);">자동차<br><span style="font-size:.75rem;">22.2%→제외</span></td>
+          <td class="tl">현대차</td><td>005380</td>
+          <td>12.2%</td><td>—</td><td>—</td>
+          <td style="text-decoration:none;"><span class="tag tag-rm">제외</span></td>
+        </tr>
+        <tr class="removed">
+          <td class="tl">기아</td><td>000270</td>
+          <td>10.0%</td><td>—</td><td>—</td>
+          <td style="text-decoration:none;"><span class="tag tag-rm">제외</span></td>
+        </tr>
+        <tr>
+          <td class="tl" rowspan="2" style="font-weight:700;">조선<br><span style="font-size:.75rem;color:var(--muted);">11.1→16.3%</span></td>
+          <td class="tl">한화오션</td><td>042660</td>
+          <td>4.4%</td><td>9.4%</td><td>9.4%</td>
+          <td><span class="tag tag-keep">비중↑</span></td>
+        </tr>
+        <tr>
+          <td class="tl">HD한국조선해양</td><td>009540</td>
+          <td>6.7%</td><td>6.9%</td><td>6.9%</td>
+          <td><span class="tag tag-keep">비중↑</span></td>
+        </tr>
+        <tr>
+          <td class="tl" rowspan="2" style="font-weight:700;">방산<br><span style="font-size:.75rem;color:var(--muted);">11.1→16.3%</span></td>
+          <td class="tl">한화에어로스페이스</td><td>012450</td>
+          <td>8.9%</td><td>13.1%</td><td>13.1%</td>
+          <td><span class="tag tag-keep">비중↑</span></td>
+        </tr>
+        <tr>
+          <td class="tl">KAI</td><td>047810</td>
+          <td>2.2%</td><td>3.2%</td><td>3.2%</td>
+          <td><span class="tag tag-keep">비중↑</span></td>
+        </tr>
+        <tr class="hl">
+          <td class="tl" rowspan="3" style="font-weight:700;color:var(--accent);">K-소비재<br><span style="font-size:.75rem;">신규 9.3%</span></td>
+          <td class="tl">삼양식품</td><td>003230</td>
+          <td>—</td><td style="font-weight:700;color:var(--c-rev1);">7.5%</td><td>—</td>
+          <td><span class="tag tag-rev1">Rev1 전용</span></td>
+        </tr>
+        <tr class="hl">
+          <td class="tl">오리온</td><td>271560</td>
+          <td>—</td><td>—</td><td style="font-weight:700;color:var(--c-rev2);">6.5%</td>
+          <td><span class="tag tag-rev2">Rev2 전용</span></td>
+        </tr>
+        <tr class="hl">
+          <td class="tl">코스맥스</td><td>192820</td>
+          <td>—</td><td>1.8%</td><td>2.8%</td>
+          <td><span class="tag tag-new">공통 신규</span></td>
+        </tr>
+        <tr>
+          <td class="tl" rowspan="2" style="font-weight:700;">원전<br><span style="font-size:.75rem;color:var(--muted);">5.5→8.1%</span></td>
+          <td class="tl">두산에너빌리티</td><td>034020</td>
+          <td>2.8%</td><td>5.1%</td><td>5.1%</td>
+          <td><span class="tag tag-keep">비중↑</span></td>
+        </tr>
+        <tr>
+          <td class="tl">HD현대일렉트릭</td><td>267260</td>
+          <td>2.8%</td><td>3.0%</td><td>3.0%</td>
+          <td><span class="tag tag-keep">비중↑</span></td>
+        </tr>
+        <tr class="tot">
+          <td class="tl">합계</td><td></td><td></td>
+          <td>100%</td><td>100%</td><td>100%</td><td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 3. BACKTEST DETAIL ===== -->
+<div class="section">
+  <h2 class="section-title">백테스트 상세 (2024.3.29 ~ 2026.3.31)</h2>
+
+  <!-- Original -->
+  <div class="card" style="border-left:4px solid var(--c-orig);">
+    <h3 style="color:var(--c-orig); margin-bottom:14px;">Original Portfolio — 자동차 포함 &nbsp;<span class="tag tag-orig">+223.1%</span></h3>
+    <table>
+      <thead>
+        <tr><th class="tl">종목</th><th>비중</th><th class="tr">시작가</th><th class="tr">종료가</th><th>수익률</th><th>기여도</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="tl">삼성전자</td><td>25.0%</td><td class="tr">82,400</td><td class="tr">169,200</td><td class="pos">+105.3%</td><td class="pos">+26.3%</td></tr>
+        <tr><td class="tl">SK하이닉스</td><td>25.0%</td><td class="tr">183,000</td><td class="tr">823,000</td><td class="pos">+349.7%</td><td class="pos">+87.4%</td></tr>
+        <tr style="background:#ffebee;"><td class="tl">현대차</td><td>12.2%</td><td class="tr">233,000</td><td class="tr">449,500</td><td class="pos">+92.9%</td><td class="pos">+11.3%</td></tr>
+        <tr style="background:#ffebee;"><td class="tl">기아</td><td>10.0%</td><td class="tr">110,200</td><td class="tr">146,400</td><td class="pos">+32.8%</td><td class="pos">+3.3%</td></tr>
+        <tr><td class="tl">HD한국조선해양</td><td>6.7%</td><td class="tr">118,400</td><td class="tr">345,250</td><td class="pos">+191.6%</td><td class="pos">+12.8%</td></tr>
+        <tr><td class="tl">한화오션</td><td>4.4%</td><td class="tr">27,600</td><td class="tr">121,000</td><td class="pos">+338.4%</td><td class="pos">+14.9%</td></tr>
+        <tr><td class="tl">한화에어로스페이스</td><td>8.9%</td><td class="tr">227,152*</td><td class="tr">1,237,000</td><td class="pos">+444.6%</td><td class="pos">+39.6%</td></tr>
+        <tr><td class="tl">KAI</td><td>2.2%</td><td class="tr">51,500</td><td class="tr">166,900</td><td class="pos">+224.1%</td><td class="pos">+4.9%</td></tr>
+        <tr><td class="tl">두산에너빌리티</td><td>2.8%</td><td class="tr">17,220</td><td class="tr">92,500</td><td class="pos">+437.2%</td><td class="pos">+12.2%</td></tr>
+        <tr><td class="tl">HD현대일렉트릭</td><td>2.8%</td><td class="tr">179,400</td><td class="tr">838,000</td><td class="pos">+367.0%</td><td class="pos">+10.3%</td></tr>
+        <tr class="tot"><td class="tl">합계</td><td>100%</td><td></td><td></td><td></td><td class="pos" style="font-size:1.1rem;">+223.1%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Revised 1 -->
+  <div class="card" style="border-left:4px solid var(--c-rev1);">
+    <h3 style="color:var(--c-rev1); margin-bottom:14px;">Revised 1 — 삼양식품 + 코스맥스 &nbsp;<span class="tag tag-rev1">+293.9%</span></h3>
+    <table>
+      <thead>
+        <tr><th class="tl">종목</th><th>비중</th><th class="tr">시작가</th><th class="tr">종료가</th><th>수익률</th><th>기여도</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="tl">삼성전자</td><td>25.0%</td><td class="tr">82,400</td><td class="tr">169,200</td><td class="pos">+105.3%</td><td class="pos">+26.3%</td></tr>
+        <tr><td class="tl">SK하이닉스</td><td>25.0%</td><td class="tr">183,000</td><td class="tr">823,000</td><td class="pos">+349.7%</td><td class="pos">+87.4%</td></tr>
+        <tr><td class="tl">한화오션</td><td>9.4%</td><td class="tr">27,600</td><td class="tr">121,000</td><td class="pos">+338.4%</td><td class="pos">+31.8%</td></tr>
+        <tr><td class="tl">HD한국조선해양</td><td>6.9%</td><td class="tr">118,400</td><td class="tr">345,250</td><td class="pos">+191.6%</td><td class="pos">+13.2%</td></tr>
+        <tr><td class="tl">한화에어로스페이스</td><td>13.1%</td><td class="tr">227,152*</td><td class="tr">1,237,000</td><td class="pos">+444.6%</td><td class="pos">+58.2%</td></tr>
+        <tr><td class="tl">KAI</td><td>3.2%</td><td class="tr">51,500</td><td class="tr">166,900</td><td class="pos">+224.1%</td><td class="pos">+7.2%</td></tr>
+        <tr class="hl"><td class="tl">삼양식품 <span class="tag tag-new">신규</span></td><td>7.5%</td><td class="tr">210,500</td><td class="tr">1,200,000</td><td class="pos">+469.8%</td><td class="pos">+35.2%</td></tr>
+        <tr class="hl"><td class="tl">코스맥스 <span class="tag tag-new">신규</span></td><td>1.8%</td><td class="tr">120,100</td><td class="tr">196,500</td><td class="pos">+63.6%</td><td class="pos">+1.1%</td></tr>
+        <tr><td class="tl">두산에너빌리티</td><td>5.1%</td><td class="tr">17,220</td><td class="tr">92,500</td><td class="pos">+437.2%</td><td class="pos">+22.3%</td></tr>
+        <tr><td class="tl">HD현대일렉트릭</td><td>3.0%</td><td class="tr">179,400</td><td class="tr">838,000</td><td class="pos">+367.0%</td><td class="pos">+11.0%</td></tr>
+        <tr class="tot"><td class="tl">합계</td><td>100%</td><td></td><td></td><td></td><td class="pos" style="font-size:1.1rem;">+293.9%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Revised 2 -->
+  <div class="card" style="border-left:4px solid var(--c-rev2);">
+    <h3 style="color:var(--c-rev2); margin-bottom:14px;">Revised 2 — 오리온 + 코스맥스 &nbsp;<span class="tag tag-rev2">+262.0%</span></h3>
+    <table>
+      <thead>
+        <tr><th class="tl">종목</th><th>비중</th><th class="tr">시작가</th><th class="tr">종료가</th><th>수익률</th><th>기여도</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="tl">삼성전자</td><td>25.0%</td><td class="tr">82,400</td><td class="tr">169,200</td><td class="pos">+105.3%</td><td class="pos">+26.3%</td></tr>
+        <tr><td class="tl">SK하이닉스</td><td>25.0%</td><td class="tr">183,000</td><td class="tr">823,000</td><td class="pos">+349.7%</td><td class="pos">+87.4%</td></tr>
+        <tr><td class="tl">한화오션</td><td>9.4%</td><td class="tr">27,600</td><td class="tr">121,000</td><td class="pos">+338.4%</td><td class="pos">+31.8%</td></tr>
+        <tr><td class="tl">HD한국조선해양</td><td>6.9%</td><td class="tr">118,400</td><td class="tr">345,250</td><td class="pos">+191.6%</td><td class="pos">+13.2%</td></tr>
+        <tr><td class="tl">한화에어로스페이스</td><td>13.1%</td><td class="tr">227,152*</td><td class="tr">1,237,000</td><td class="pos">+444.6%</td><td class="pos">+58.2%</td></tr>
+        <tr><td class="tl">KAI</td><td>3.2%</td><td class="tr">51,500</td><td class="tr">166,900</td><td class="pos">+224.1%</td><td class="pos">+7.2%</td></tr>
+        <tr class="hl"><td class="tl">오리온 <span class="tag tag-new">신규</span></td><td>6.5%</td><td class="tr">91,000</td><td class="tr">128,000</td><td class="pos">+40.7%</td><td class="pos">+2.6%</td></tr>
+        <tr class="hl"><td class="tl">코스맥스 <span class="tag tag-new">신규</span></td><td>2.8%</td><td class="tr">120,100</td><td class="tr">196,500</td><td class="pos">+63.6%</td><td class="pos">+1.8%</td></tr>
+        <tr><td class="tl">두산에너빌리티</td><td>5.1%</td><td class="tr">17,220</td><td class="tr">92,500</td><td class="pos">+437.2%</td><td class="pos">+22.3%</td></tr>
+        <tr><td class="tl">HD현대일렉트릭</td><td>3.0%</td><td class="tr">179,400</td><td class="tr">838,000</td><td class="pos">+367.0%</td><td class="pos">+11.0%</td></tr>
+        <tr class="tot"><td class="tl">합계</td><td>100%</td><td></td><td></td><td></td><td class="pos" style="font-size:1.1rem;">+262.0%</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:8px;font-size:.8rem;color:var(--muted);">*한화에어로스페이스: 인적분할 반영 수정주가 | 주가 출처: Yahoo Finance, Naver Finance</p>
+  </div>
+</div>
+
+<!-- ===== 4. COMPARISON SUMMARY ===== -->
+<div class="section">
+  <h2 class="section-title">성과 비교 종합</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th class="tl">지표</th>
+          <th>KOSPI200</th>
+          <th style="background:var(--c-orig);">Original</th>
+          <th style="background:var(--c-rev1);">Revised 1</th>
+          <th style="background:var(--c-rev2);">Revised 2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tl">2년 수익률</td>
+          <td>+101.0%</td>
+          <td class="pos">+223.1%</td>
+          <td class="pos" style="font-size:1.05rem;">+293.9%</td>
+          <td class="pos" style="font-size:1.05rem;">+262.0%</td>
+        </tr>
+        <tr>
+          <td class="tl">연환산 CAGR</td>
+          <td>~42%</td>
+          <td class="pos">~80%</td>
+          <td class="pos">~98%</td>
+          <td class="pos">~90%</td>
+        </tr>
+        <tr>
+          <td class="tl">KOSPI200 대비 초과</td>
+          <td>—</td>
+          <td class="pos">+122.1%p</td>
+          <td class="pos">+192.9%p</td>
+          <td class="pos">+161.0%p</td>
+        </tr>
+        <tr>
+          <td class="tl">Original 대비 초과</td>
+          <td></td>
+          <td>—</td>
+          <td class="pos">+70.8%p</td>
+          <td class="pos">+38.9%p</td>
+        </tr>
+        <tr>
+          <td class="tl">종목 수</td>
+          <td>200</td>
+          <td>10</td>
+          <td>10</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td class="tl">K-소비재 기여도</td>
+          <td>—</td>
+          <td style="color:var(--muted);">자동차 +14.6%</td>
+          <td class="pos">+36.3%</td>
+          <td class="pos">+4.4%</td>
+        </tr>
+        <tr>
+          <td class="tl">비중변경 효과</td>
+          <td>—</td>
+          <td>—</td>
+          <td class="pos">+49.1%</td>
+          <td class="pos">+49.1%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Grouped bar: 종목별 기여도 비교 -->
+  <div class="card">
+    <h3 style="font-size:1rem; font-weight:700; margin-bottom:8px;">종목별 기여도 비교</h3>
+    <div class="legend-row">
+      <span><div class="ldot" style="background:var(--c-orig)"></div>Original</span>
+      <span><div class="ldot" style="background:var(--c-rev1)"></div>Revised 1</span>
+      <span><div class="ldot" style="background:var(--c-rev2)"></div>Revised 2</span>
+    </div>
+    <div class="gbar" style="margin-top:16px;">
+      <div class="gbar-row">
+        <div class="gbar-label">SK하이닉스</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:88%;">+87.4%</div>
+          <div class="gbar-track rev1" style="width:88%;">+87.4%</div>
+          <div class="gbar-track rev2" style="width:88%;">+87.4%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">한화에어로스페이스</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:40%;">+39.6%</div>
+          <div class="gbar-track rev1" style="width:58%;">+58.2%</div>
+          <div class="gbar-track rev2" style="width:58%;">+58.2%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">삼양식품</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+          <div class="gbar-track rev1" style="width:35%;">+35.2%</div>
+          <div class="gbar-track rev2" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">한화오션</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:15%;">+14.9%</div>
+          <div class="gbar-track rev1" style="width:32%;">+31.8%</div>
+          <div class="gbar-track rev2" style="width:32%;">+31.8%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">삼성전자</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:26%;">+26.3%</div>
+          <div class="gbar-track rev1" style="width:26%;">+26.3%</div>
+          <div class="gbar-track rev2" style="width:26%;">+26.3%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">두산에너빌리티</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:12%;">+12.2%</div>
+          <div class="gbar-track rev1" style="width:22%;">+22.3%</div>
+          <div class="gbar-track rev2" style="width:22%;">+22.3%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">HD한국조선해양</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:13%;">+12.8%</div>
+          <div class="gbar-track rev1" style="width:13%;">+13.2%</div>
+          <div class="gbar-track rev2" style="width:13%;">+13.2%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">현대차</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:11%;">+11.3%</div>
+          <div class="gbar-track rev1" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+          <div class="gbar-track rev2" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">HD현대일렉트릭</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:10%;">+10.3%</div>
+          <div class="gbar-track rev1" style="width:11%;">+11.0%</div>
+          <div class="gbar-track rev2" style="width:11%;">+11.0%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">KAI</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:5%;">+4.9%</div>
+          <div class="gbar-track rev1" style="width:7%;">+7.2%</div>
+          <div class="gbar-track rev2" style="width:7%;">+7.2%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">기아</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:3%;">+3.3%</div>
+          <div class="gbar-track rev1" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+          <div class="gbar-track rev2" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">오리온</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+          <div class="gbar-track rev1" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+          <div class="gbar-track rev2" style="width:3%;">+2.6%</div>
+        </div>
+      </div>
+      <div class="gbar-row">
+        <div class="gbar-label">코스맥스</div>
+        <div class="gbar-bars">
+          <div class="gbar-track orig" style="width:0%;min-width:40px;background:#ccc;color:#999;">—</div>
+          <div class="gbar-track rev1" style="width:1%;min-width:40px;">+1.1%</div>
+          <div class="gbar-track rev2" style="width:2%;min-width:40px;">+1.8%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 5. WHAT DRIVES THE DIFFERENCE ===== -->
+<div class="section">
+  <h2 class="section-title">수익률 차이 분해</h2>
+  <div class="card">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;">Original → Revised 1 (+70.8%p)</h3>
+    <table>
+      <thead><tr><th class="tl">요인</th><th>내용</th><th>기여</th></tr></thead>
+      <tbody>
+        <tr><td class="tl"><span class="tag tag-rm">제외</span> 현대차+기아</td><td>비중 22.2% 제거 (기여도 14.6%)</td><td class="neg">-14.6%</td></tr>
+        <tr><td class="tl"><span class="tag tag-new">편입</span> 삼양식품</td><td>7.5% × +469.8%</td><td class="pos">+35.2%</td></tr>
+        <tr><td class="tl"><span class="tag tag-new">편입</span> 코스맥스</td><td>1.8% × +63.6%</td><td class="pos">+1.1%</td></tr>
+        <tr><td class="tl"><span class="tag tag-keep">비중변경</span> 나머지 8종목</td><td>방산·조선·원전 비중 증가</td><td class="pos">+49.1%</td></tr>
+        <tr class="tot"><td class="tl">합계</td><td></td><td class="pos">+70.8%p</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;">Original → Revised 2 (+38.9%p)</h3>
+    <table>
+      <thead><tr><th class="tl">요인</th><th>내용</th><th>기여</th></tr></thead>
+      <tbody>
+        <tr><td class="tl"><span class="tag tag-rm">제외</span> 현대차+기아</td><td>비중 22.2% 제거 (기여도 14.6%)</td><td class="neg">-14.6%</td></tr>
+        <tr><td class="tl"><span class="tag tag-new">편입</span> 오리온</td><td>6.5% × +40.7%</td><td class="pos">+2.6%</td></tr>
+        <tr><td class="tl"><span class="tag tag-new">편입</span> 코스맥스</td><td>2.8% × +63.6%</td><td class="pos">+1.8%</td></tr>
+        <tr><td class="tl"><span class="tag tag-keep">비중변경</span> 나머지 8종목</td><td>방산·조선·원전 비중 증가</td><td class="pos">+49.1%</td></tr>
+        <tr class="tot"><td class="tl">합계</td><td></td><td class="pos">+38.9%p</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;">Revised 1 vs Revised 2 (-31.9%p)</h3>
+    <table>
+      <thead><tr><th class="tl">요인</th><th>Rev1</th><th>Rev2</th><th>차이</th></tr></thead>
+      <tbody>
+        <tr><td class="tl">K-푸드 종목</td><td>삼양식품 7.5%<br><span style="font-size:.8rem;">+469.8% → 기여 +35.2%</span></td><td>오리온 6.5%<br><span style="font-size:.8rem;">+40.7% → 기여 +2.6%</span></td><td class="neg">-32.6%p</td></tr>
+        <tr><td class="tl">코스맥스 비중</td><td>1.8% → 기여 +1.1%</td><td>2.8% → 기여 +1.8%</td><td class="pos">+0.7%p</td></tr>
+        <tr class="tot"><td class="tl">순차이</td><td></td><td></td><td class="neg">-31.9%p</td></tr>
+      </tbody>
+    </table>
+    <div class="insight">
+      <strong>핵심:</strong> Rev1과 Rev2의 차이는 <strong>오직 K-푸드 1종목</strong>에서 발생합니다.
+      삼양식품(+469.8%) vs 오리온(+40.7%)의 과거 수익률 차이(429.1%p)가 비중(7.5% vs 6.5%)을 통해 32.6%p 차이로 전달됩니다.
+      나머지 8종목의 기여도는 동일합니다.
+    </div>
+  </div>
+</div>
+
+<!-- ===== 6. FORWARD LOOKING ===== -->
+<div class="section">
+  <h2 class="section-title">전행적 관점: 삼양식품 vs 오리온</h2>
+  <div class="card">
+    <p style="margin-bottom:16px;font-size:.95rem;">
+      백테스트는 <strong>과거</strong>입니다. 투자자가 이 ETF를 살 때 보는 것은 <strong>미래</strong>입니다.
+      두 K-푸드 후보의 전행적 매력도를 비교합니다.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th class="tl">평가 항목</th>
+          <th style="background:var(--c-rev1);">삼양식품</th>
+          <th style="background:var(--c-rev2);">오리온</th>
+          <th>판정</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tl">Forward PER</td>
+          <td>~21배</td>
+          <td style="font-weight:700;">~8.8배</td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">PBR</td>
+          <td>7.66배</td>
+          <td style="font-weight:700;">~1.5배</td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">영업이익률</td>
+          <td style="font-weight:700;">20%+</td>
+          <td>17%+</td>
+          <td><span class="tag tag-rev1">삼양 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">영업이익 성장률 (2026E)</td>
+          <td>+32% (감속 중)</td>
+          <td style="font-weight:700;">+12% (안정적)</td>
+          <td>삼양 높지만 감속</td>
+        </tr>
+        <tr>
+          <td class="tl">제품 다각화</td>
+          <td class="neg">불닭 91.7% 의존</td>
+          <td class="pos">초코파이·오징어·꼬북칩 등</td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">지역 다각화</td>
+          <td>미국 28% 편중<br>해외 전량 수출</td>
+          <td class="pos">중국·베트남·러시아·한국<br>4극 현지 법인</td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">해외 생산기지</td>
+          <td class="neg">없음 (전량 국내생산 → 수출)</td>
+          <td class="pos">중국·베트남·러시아 현지 공장</td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">관세 리스크</td>
+          <td class="neg">매우 높음 (수출 의존)</td>
+          <td class="pos">낮음 (현지 생산)</td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">"후행적 선별" 인상</td>
+          <td class="neg">강함 (+469.8%)</td>
+          <td class="pos">약함 (+40.7%)</td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">투자자 피칭</td>
+          <td>"더 오를 겁니다"<br>(방어적)</td>
+          <td style="font-weight:700;">"PER 9배인데 4개국에서 돈 법니다"<br>(공격적)</td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+        <tr>
+          <td class="tl">애널리스트 컨센서스</td>
+          <td>20명 전원 매수<br><span style="font-size:.8rem;color:var(--muted);">(과열 경고 신호)</span></td>
+          <td>다수 매수<br><span style="font-size:.8rem;color:var(--muted);">(적정 수준)</span></td>
+          <td><span class="tag tag-rev2">오리온 우위</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight" style="margin-top:20px;">
+      <strong>결론:</strong> 11개 항목 중 <strong>오리온이 8개 항목에서 우위</strong>.
+      삼양식품이 우위인 영업이익률(20%+)은 인정하지만, Forward PER 21배 vs 8.8배의 밸류에이션 갭이 이를 상쇄합니다.
+      <strong>백테스트 -31.9%p의 댓가로 전행적 설득력을 크게 확보</strong>합니다.
+    </div>
+  </div>
+
+  <!-- Valuation comparison cards -->
+  <div class="val-grid">
+    <div class="val-card warn">
+      <h4 style="color:var(--c-rev1);">삼양식품 — 밸류에이션 부담</h4>
+      <table style="font-size:.85rem;">
+        <tr><td class="tl">Forward PER</td><td class="tr" style="font-weight:700;">21배</td></tr>
+        <tr><td class="tl">PBR</td><td class="tr">7.66배</td></tr>
+        <tr><td class="tl">ROE</td><td class="tr">37.6%</td></tr>
+        <tr><td class="tl">영업이익 성장 추이</td><td class="tr neg">55%→32%→21% (감속)</td></tr>
+        <tr><td class="tl">52주 고점 대비</td><td class="tr neg">-25%</td></tr>
+        <tr><td class="tl">불닭 매출 의존도</td><td class="tr neg">91.7%</td></tr>
+        <tr><td class="tl">해외 생산기지</td><td class="tr neg">없음</td></tr>
+      </table>
+    </div>
+    <div class="val-card good">
+      <h4 style="color:var(--c-rev2);">오리온 — 밸류에이션 매력</h4>
+      <table style="font-size:.85rem;">
+        <tr><td class="tl">Forward PER</td><td class="tr" style="font-weight:700;color:var(--green);">8.8배</td></tr>
+        <tr><td class="tl">PBR</td><td class="tr">~1.5배</td></tr>
+        <tr><td class="tl">영업이익률</td><td class="tr">17%+</td></tr>
+        <tr><td class="tl">영업이익 성장 (2026E)</td><td class="tr pos">+12% (안정)</td></tr>
+        <tr><td class="tl">해외매출 비중</td><td class="tr pos">60%+</td></tr>
+        <tr><td class="tl">제품 다각화</td><td class="tr pos">초코파이·오징어·꼬북칩</td></tr>
+        <tr><td class="tl">현지 생산</td><td class="tr pos">중국·베트남·러시아</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 7. THREE-WAY VERDICT ===== -->
+<div class="section">
+  <h2 class="section-title">최종 비교 판정</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th class="tl">평가 차원</th>
+          <th style="background:var(--c-orig);">Original</th>
+          <th style="background:var(--c-rev1);">Revised 1</th>
+          <th style="background:var(--c-rev2);">Revised 2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tl">백테스트 수익률</td>
+          <td>+223.1%</td>
+          <td class="pos" style="font-weight:800;">+293.9% ★</td>
+          <td class="pos">+262.0%</td>
+        </tr>
+        <tr>
+          <td class="tl">KOSPI200 초과</td>
+          <td>+122.1%p</td>
+          <td class="pos" style="font-weight:800;">+192.9%p ★</td>
+          <td class="pos">+161.0%p</td>
+        </tr>
+        <tr>
+          <td class="tl">전행적 성장 논리</td>
+          <td>성숙산업(자동차) 포함</td>
+          <td>삼양 성장 감속 중</td>
+          <td class="pos" style="font-weight:800;">PER 8.8배 저평가 ★</td>
+        </tr>
+        <tr>
+          <td class="tl">"후행적 선별" 리스크</td>
+          <td>중간</td>
+          <td class="neg" style="font-weight:800;">높음 (삼양 +470%)</td>
+          <td class="pos" style="font-weight:800;">낮음 ★</td>
+        </tr>
+        <tr>
+          <td class="tl">투자자 설득력</td>
+          <td>자동차 = 왜?</td>
+          <td>과거에 좋았던 거 아닌가?</td>
+          <td class="pos" style="font-weight:800;">공격적 피칭 가능 ★</td>
+        </tr>
+        <tr>
+          <td class="tl">포트폴리오 리스크</td>
+          <td>EV 전환 리스크</td>
+          <td>단일제품(불닭) 리스크</td>
+          <td class="pos" style="font-weight:800;">4개국 분산 ★</td>
+        </tr>
+        <tr>
+          <td class="tl">관세/환율 내성</td>
+          <td>자동차 수출 의존</td>
+          <td class="neg">전량 국내생산→수출</td>
+          <td class="pos" style="font-weight:800;">현지 생산 ★</td>
+        </tr>
+        <tr>
+          <td class="tl">마케팅 메시지 선명도</td>
+          <td>무난함</td>
+          <td>강하나 방어적</td>
+          <td class="pos" style="font-weight:800;">명확하고 공격적 ★</td>
+        </tr>
+        <tr class="tot">
+          <td class="tl">★ 종합 우위 항목</td>
+          <td>0개</td>
+          <td>2개 (수익률)</td>
+          <td style="color:var(--c-rev2);font-size:1.1rem;">6개 (전행적 매력)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight" style="margin-top:20px;border-left-color:var(--c-rev2);background:#e3f2fd;">
+      <strong>Revised 2 추천 근거:</strong><br>
+      백테스트에서 -31.9%p 손해를 보지만(+262.0% vs +293.9%),
+      <strong>8개 평가 항목 중 6개에서 우위</strong>를 점합니다.<br>
+      투자자에게 "과거에 올랐던 걸 모았다"가 아니라
+      <strong>"PER 9배짜리 글로벌 K-푸드를 아직 시장이 몰라본다"</strong>라는
+      전행적 스토리를 제시할 수 있습니다.<br>
+      +262.0%도 KOSPI200(+101%) 대비 2.6배 초과수익이며,
+      충분히 강력한 백테스트입니다.
+    </div>
+  </div>
+</div>
+
+<!-- ===== 8. MARKETING ===== -->
+<div class="section">
+  <h2 class="section-title">포트폴리오별 마케팅 메시지</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+    <div class="card" style="border-top:4px solid var(--c-orig);text-align:center;">
+      <div style="font-size:.82rem;color:var(--c-orig);font-weight:700;">ORIGINAL</div>
+      <div style="font-size:1.3rem;font-weight:800;margin:12px 0;">+223%</div>
+      <div style="font-size:.9rem;color:var(--muted);line-height:1.7;">
+        "200개를 사서 101%,<br>10개를 사서 223%."
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--c-rev1);text-align:center;">
+      <div style="font-size:.82rem;color:var(--c-rev1);font-weight:700;">REVISED 1</div>
+      <div style="font-size:1.3rem;font-weight:800;margin:12px 0;">+294%</div>
+      <div style="font-size:.9rem;color:var(--muted);line-height:1.7;">
+        "200개를 사서 101%,<br>10개를 사서 294%."<br>
+        <span style="font-size:.78rem;color:var(--red);">⚠ "과거수익 좋은 걸 모은 거 아닌가?"</span>
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--c-rev2);text-align:center;">
+      <div style="font-size:.82rem;color:var(--c-rev2);font-weight:700;">REVISED 2 ★ 추천</div>
+      <div style="font-size:1.3rem;font-weight:800;margin:12px 0;">+262%</div>
+      <div style="font-size:.9rem;line-height:1.7;">
+        "200개를 사서 101%,<br>10개를 사서 262%."<br>
+        <strong style="color:var(--c-rev2);">"그런데 아직 PER 9배인 종목이 있습니다."</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 9. DISCLAIMER ===== -->
+<div class="section">
+  <h2 class="section-title">유의사항</h2>
+  <div class="card" style="background:#fafafa;border:1px solid var(--border);font-size:.86rem;color:var(--muted);line-height:2;">
+    <ul style="padding-left:20px;">
+      <li>과거의 운용실적이 미래의 수익률을 보장하지 않습니다.</li>
+      <li>투자원금의 손실이 발생할 수 있습니다.</li>
+      <li>집중투자 전략으로 분산투자 대비 변동성이 높을 수 있습니다.</li>
+      <li>백테스트 결과는 시뮬레이션이며 실제 운용 수익률과 다를 수 있습니다.</li>
+      <li>ETF 상품화 시 단일종목 30% 상한 규제를 확인해야 합니다.</li>
+      <li>배당 수익은 반영되지 않았습니다.</li>
+      <li>한화에어로스페이스 주가는 인적분할 반영 수정주가입니다.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div class="footer">
+  <p><strong>K-5대 성장산업 정예10 ETF — 3 포트폴리오 백테스트 비교 리포트</strong></p>
+  <p>주가 데이터: Yahoo Finance, Naver Finance (2024.3.29 / 2026.3.31)</p>
+  <p>밸류에이션 데이터: Naver Finance, Investing.com, Alpha Spread (2026.4.14)</p>
+  <p>분석 도구: Claude Code (Opus 4.6) | 문서 생성일: 2026-04-14</p>
+</div>
+
+</div><!-- /container -->
+</body>
+</html>
